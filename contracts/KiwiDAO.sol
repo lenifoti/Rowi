@@ -31,7 +31,6 @@ contract KiwiDAO is Ownable, Pausable {
     KiwiAsset kiwiAssetNFT;
     KiwiHabitat kiwiHabitatNFT;
 
- 
     //
     // NGOs
     //
@@ -66,6 +65,16 @@ contract KiwiDAO is Ownable, Pausable {
     int32 yesVotes;
     int32 noVotes;
     int32 numVotes;
+
+    constructor () {
+        //Create the KiwiNFT contract
+        kiwiNFT = new Kiwi();
+        //Create the KiwiAssetNFT contract
+        kiwiAssetNFT = new KiwiAsset();
+        //Create the KiwiHabitatNFT contract
+        kiwiHabitatNFT = new KiwiHabitat();
+
+    }
 
     //Recieve all ETH there.  (TODO: ERC20s are permissioned and accumulated in the ERC20 contract)
     receive() external payable {
@@ -226,7 +235,7 @@ contract KiwiDAO is Ownable, Pausable {
     // Funds distribution to all NGOs equally.
     //
     
-    function  distributeFunds(uint256 _theID) public {
+    function  distributeFunds() public {
         if (treasury >0){ //check for recursion here.
         
             require(treasury >3*10^18, "Less that 3 ETH");  //TODO Don't need this if reward is 0.25%

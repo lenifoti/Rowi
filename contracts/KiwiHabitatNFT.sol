@@ -28,7 +28,9 @@ contract KiwiHabitat is ERC721, ERC721URIStorage, ERC721Enumerable,  Pausable, O
 
     Counters.Counter private _tokenIdCounter;
 
-    constructor() ERC721("KiwiHabitat", "KHT") {}
+    constructor() ERC721("KiwiHabitat", "KHT") {
+
+    }
 
     function pause() public onlyOwner {
         _pause();
