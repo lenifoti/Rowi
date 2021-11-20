@@ -40,11 +40,13 @@ contract Kiwi is ERC721, ERC721URIStorage, ERC721Enumerable,  Pausable, Ownable,
         _unpause();
     }
 
-    function safeMint(address to, string memory uri) public onlyOwner {
+    function safeMint(address to, string memory uri) 
+    public onlyOwner returns (uint256){
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
         _safeMint(to, tokenId);
         _setTokenURI(tokenId, uri);
+        return (tokenId);
     }
 
 /*
@@ -105,6 +107,10 @@ contract Kiwi is ERC721, ERC721URIStorage, ERC721Enumerable,  Pausable, Ownable,
     // Returns True if the token exists, else false.
     function tokenExists(uint256 _tokenId) external view returns (bool){
         return _exists(_tokenId);
+    }
+
+    function setTokenURI(uint256 tokenId, string memory _tokenURI) public{
+        _setTokenURI(tokenId, _tokenURI);
     }
 
     /**

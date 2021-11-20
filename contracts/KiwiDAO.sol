@@ -50,8 +50,8 @@ contract KiwiDAO is Ownable, Pausable {
 
     int32 public kiwiPopulation = 0;
 
-    enum TAsset {T_MAP, T_DOG, T_DRONE, T_RADIO, T_GUIDE}
-    enum PAsset {P_TRAP, P_FENCE, P_CAMERA}
+    //enum TAsset {T_MAP, T_DOG, T_DRONE, T_RADIO, T_GUIDE}
+    //enum PAsset {P_TRAP, P_FENCE, P_CAMERA}
 
     //
     // Governance and voting
@@ -81,40 +81,75 @@ contract KiwiDAO is Ownable, Pausable {
         treasury += msg.value;
     }
 
-   //
+    //
     // Interface to NFT holder
     //
-    function mintEgg(address _NGO, uint256 _habitatID, TAsset _t1, TAsset _t2, TAsset _t3, PAsset _p1, PAsset p2) 
+    mapping (uint256 => bool)  trackingAssets;
+    uint8 numTrackingAssets;
+    mapping (uint256 => bool)  protectionAssets;
+    uint8 numProtectionAssets;
+
+    function mintEgg(uint256 _habitatID, uint256[5] memory _IDs) 
         public payable returns (uint256 _kiwiID) {
-        require (NGO_ID[msg.sender] >0, "Not a registered NGO");
-
         require( msg.value != 10^16, "Please send exactly 0.01 ETH.");
+        require( kiwiHabitatNFT.isOwnedBy(_habitatID, msg.sender), "Not owner");
 
-        //Mint the Kiwi
-        //Increment voting-power of NGO.
-        NGO_numVotes[NGO_ID[_NGO]]++;
-        
+
+        // We use the mappings to check for duplicates. NOTE: optimise this
+        // Asset type 0-2 are tracking 3-4 are protection
+        for (uint8 i=0; i<5; i++){
+            require( kiwiAssetNFT.isOwnedBy(_IDs[i], msg.sender), "Not owner");
+            if (_IDs[i] <= 2 && trackingAssets[_IDs[i]] != true){
+                numTrackingAssets++;
+                trackingAssets[_IDs[i]]=true;
+            }else{
+                if (protectionAssets[_IDs[i]] !=true){
+                    numProtectionAssets++;
+                    protectionAssets[_IDs[i]]=true;
+                }
+            }
+        }
+        require ((numTrackingAssets == 3 && numProtectionAssets == 2), "Bad combination"); 
+
+        // All checked out, now mint the Kiwi - defailt the CID
+        _kiwiID = kiwiNFT.safeMint(address(msg.sender), "....????....");
+  
         treasury += msg.value;
 
-        return 1; // TODO - call the mint function 
+        //Now burn the assets.
+        for (uint8 i=0; i<5; i++){
+
+            kiwiAssetNFT.burn(_IDs[i]);
+
+            // Also undo the mapping NOTE: optimise this!
+            delete trackingAssets[_IDs[i]];
+            delete protectionAssets[_IDs[i]];
+        }
+
+  
+        //TODO Increment voting-power of NGO - can't do this yet!
+        //NGO_numVotes[NGO_ID[_NGO]]++;
+        return _kiwiID; 
     } 
 
     //
     // Interface to owner
     //
-    function mintAsset(PAsset _assetType) 
-        public onlyOwner returns (uint256 _KiwiAssetID) {
-
-        return 1; // TODO - call the mint function 
+    function mintAsset(string memory _assetURI, uint8 _type) 
+        public onlyOwner returns (uint256 _kiwiAssetID) {
+        _kiwiAssetID = kiwiAssetNFT.safeMint(address(msg.sender), "");
+        kiwiAssetNFT.setTokenURI(_kiwiAssetID, _assetURI);
+        kiwiAssetNFT.setAssetType(_kiwiAssetID, _type);
+        return _kiwiAssetID; 
     } 
 
     //
     // Interface to owner
     //
-    function mintHabitat(uint8 _Type) 
-        public onlyOwner returns (uint256 _KiwiHabitatID) {
-
-        return 1; // TODO - call the mint function 
+    function mintHabitat(string memory _loc) 
+        public onlyOwner returns (uint256 _kiwiHabitatID) {
+        _kiwiHabitatID = kiwiHabitatNFT.safeMint(address(msg.sender), _loc);
+        return _kiwiHabitatID; 
     } 
 
     
