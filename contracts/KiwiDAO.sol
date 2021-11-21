@@ -17,6 +17,7 @@ import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "./KiwiAssetNFT.sol";
 import "./KiwiHabitatNFT.sol";
+import "./KiwiEggNFT.sol";
 import "./KiwiNFT.sol";
 
 contract KiwiDAO is Ownable, Pausable {
@@ -29,6 +30,7 @@ contract KiwiDAO is Ownable, Pausable {
     // References to other contracts.
     Kiwi kiwiNFT;
     KiwiAsset kiwiAssetNFT;
+    KiwiEgg kiwiEggNFT;
     KiwiHabitat kiwiHabitatNFT;
 
     //
@@ -82,11 +84,13 @@ contract KiwiDAO is Ownable, Pausable {
 
     }
 
-    function importNFTContracts(address _kiwi, address _asset, address _habitat) public onlyOwner {
+    function importNFTContracts(address _kiwi, address _asset, address _habitat, address _egg) public onlyOwner {
         //Create the KiwiNFT contract
         kiwiNFT = Kiwi(_kiwi);
         //Create the KiwiAssetNFT contract
         kiwiAssetNFT = KiwiAsset(_asset);
+        //Create the KiwiAssetNFT contract
+        kiwiEggNFT = KiwiEgg(_egg);
           //Create the KiwiHabitatNFT contract
         kiwiHabitatNFT = KiwiHabitat(_habitat);
     }
@@ -104,7 +108,15 @@ contract KiwiDAO is Ownable, Pausable {
     mapping (uint256 => bool)  protectionAssets;
     uint8 numProtectionAssets;
 
-    function mintEgg(uint256 _habitatID, uint256[5] memory _IDs) 
+    function mintAssets(uint256 _eggID) public payable returns (uint256[5] memory _assetIDs) {
+        require( msg.value != 10^16, "Send exactly 0.01 ETH.");
+        require( kiwiEggNFT.isOwnedBy(_eggID, msg.sender), "Not owner");  
+        for (uint8 i=0;i<5;i++){      
+        _assetIDs[i] = kiwiAssetNFT.safeMint(address(msg.sender), "....????....");
+        }
+        return (_assetIDs); 
+    }
+    function mintLiveKiwi(uint256 _habitatID, uint256[5] memory _IDs) 
         public payable returns (uint256 _kiwiID) {
         require( msg.value != 10^16, "Send exactly 0.01 ETH.");
         require( kiwiHabitatNFT.isOwnedBy(_habitatID, msg.sender), "Not owner");
