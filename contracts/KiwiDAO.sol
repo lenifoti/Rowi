@@ -66,14 +66,29 @@ contract KiwiDAO is Ownable, Pausable {
     int32 noVotes;
     int32 numVotes;
 
-    constructor () {
-        //Create the KiwiNFT contract
-        kiwiNFT = new Kiwi();
-        //Create the KiwiAssetNFT contract
-        kiwiAssetNFT = new KiwiAsset();
-        //Create the KiwiHabitatNFT contract
-        kiwiHabitatNFT = new KiwiHabitat();
+    constructor () {}
 
+
+    function createNFTContracts(/*address _owner*/) public onlyOwner {
+        //Create the KiwiNFT contract
+        //kiwiNFT = new Kiwi();
+        // kiwiNFT.transferOwnership(_owner);
+        //Create the KiwiAssetNFT contract
+        //kiwiAssetNFT = new KiwiAsset();
+        // kiwiAssetNFT.transferOwnership(_owner);
+        //Create the KiwiHabitatNFT contract
+        //kiwiHabitatNFT = new KiwiHabitat();
+        //kiwiAssetNFT.transferOwnership(_owner);
+
+    }
+
+    function importNFTContracts(address _kiwi, address _asset, address _habitat) public onlyOwner {
+        //Create the KiwiNFT contract
+        kiwiNFT = Kiwi(_kiwi);
+        //Create the KiwiAssetNFT contract
+        kiwiAssetNFT = KiwiAsset(_asset);
+          //Create the KiwiHabitatNFT contract
+        kiwiHabitatNFT = KiwiHabitat(_habitat);
     }
 
     //Recieve all ETH there.  (TODO: ERC20s are permissioned and accumulated in the ERC20 contract)
@@ -91,7 +106,7 @@ contract KiwiDAO is Ownable, Pausable {
 
     function mintEgg(uint256 _habitatID, uint256[5] memory _IDs) 
         public payable returns (uint256 _kiwiID) {
-        require( msg.value != 10^16, "Please send exactly 0.01 ETH.");
+        require( msg.value != 10^16, "Send exactly 0.01 ETH.");
         require( kiwiHabitatNFT.isOwnedBy(_habitatID, msg.sender), "Not owner");
 
 
@@ -109,7 +124,7 @@ contract KiwiDAO is Ownable, Pausable {
                 }
             }
         }
-        require ((numTrackingAssets == 3 && numProtectionAssets == 2), "Bad combination"); 
+        require ((numTrackingAssets == 3 && numProtectionAssets == 2), "Bad combo"); 
 
         // All checked out, now mint the Kiwi - defailt the CID
         _kiwiID = kiwiNFT.safeMint(address(msg.sender), "....????....");
@@ -179,7 +194,7 @@ contract KiwiDAO is Ownable, Pausable {
             noVotes++;
         }
         numVotes++;
-        require( numVotes >0, "Too many votes - vote discounted");
+        require( numVotes >0, "Overflow! Vote discounted");
     }
 
 
@@ -194,7 +209,7 @@ contract KiwiDAO is Ownable, Pausable {
             noVotes+= v;
         }
         numVotes+= v;
-        require( numVotes >0, "Too many votes - vote discounted");
+        require( numVotes >0, "Overflow! Vote discounted");
     }
     
     //
@@ -253,7 +268,7 @@ contract KiwiDAO is Ownable, Pausable {
     
     function addNGOVote(uint16 _NGO, int32 _v ) public onlyOwner{
         require(NGO_Owner[_NGO] != address(0), "NGO doesn't exist");   
-        require(_v<1000, "Ratio arg must be less than 1000");
+        require(_v<1000, "Ratio > 1000");
         // NOTE: _v can be negative, so revert if it exceeds current voting power.
         require( (NGO_numVotes[_NGO] + _v) >=0, "Can't go negative");
         NGO_numVotes[_NGO] += _v;
@@ -261,7 +276,7 @@ contract KiwiDAO is Ownable, Pausable {
     
     
     function setDAOPercent(uint16 _p) public onlyOwner{
-        require(_p<10000, "Cannot be greater than 100%");
+        require(_p<10000, "Must be < 100%");
         daoPercent = _p;
     }
     
@@ -284,7 +299,7 @@ contract KiwiDAO is Ownable, Pausable {
             
             // Send the reward
             (bool sent1, ) = msg.sender.call{value: _reward}("");
-            require(sent1, "Failed to send Ether");
+            require(sent1, "Failed to send ETH");
             
  
             // take the amount for the DAO.
@@ -297,7 +312,7 @@ contract KiwiDAO is Ownable, Pausable {
             for (uint16 i=0; i<NGO_Count; i++){
                 _treasury -= t;
                 (bool sent2, ) = NGO_Owner[i].call{value: t}("");
-                require(sent2, "Failed to send Ether");
+                require(sent2, "Failed to send ETH");
             }
             retained += _treasury;
         }

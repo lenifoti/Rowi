@@ -55,6 +55,8 @@ contract KiwiAsset is ERC721, ERC721URIStorage, ERC721Enumerable,  Pausable, Own
         _setTokenURI(tokenId, uri);
         return (tokenId);
     }
+
+
 /*
     function mintToken(address owner, string memory metadataURI) public returns (uint256)
     {
